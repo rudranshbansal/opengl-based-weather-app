@@ -6,26 +6,6 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="Weather Wiz", page_icon=":partly_sunny:", layout="wide")
 
-def add_bg_from_filesystem():
-    video_path = "./animations/sun_rain.mp4"
-    video_file = open(video_path, 'rb')
-    video_bytes = video_file.read()
-    #st.set_page_config(page_title="Weather Wiz", page_icon=":partly_sunny:", layout="wide")
-    st.markdown(
-        f"""
-        <style>
-        .reportview-container {{
-            background: url(data:image/mp4;base64,{video_bytes.decode('latin-1')});
-            background-size: cover;
-            background-repeat: no-repeat;
-            }}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-add_bg_from_filesystem()
-
 st.title("Weather Wiz")
 st.subheader("Weather around the world at your doorstep!!")
 
@@ -65,11 +45,30 @@ with col2:
     
 st.info('⛅ Weather_Wiz is our Computer Graphics Project. It is aimed at providing visualizations of the real-time weather conditions using opengl concepts taught to us in this subject.')
 
+import datetime
 
-video_file = open('./animations/sun_rain.mp4', 'rb')
+# Convert the localtime string to a datetime object
+localtime = datetime.datetime.strptime(data["location"]["localtime"], "%Y-%m-%d %H:%M")
+
+# Set the start and end times of the desired interval
+start_time = datetime.time(5, 30)
+end_time = datetime.time(19, 30)
+
+# Check if the localtime falls within the interval
+if start_time <= localtime.time() <= end_time:
+    if data["current"]["precip_mm"]<=0.1:
+        video_file = open('./animations/sun_no_rain.mp4', 'rb')
+    else:
+        video_file = open('./animations/sun_rain.mp4', 'rb')
+else:
+    if data["current"]["precip_mm"]<=0.1:
+        video_file = open('./animations/no_sun_no_rain.mp4', 'rb')
+    else:
+        video_file = open('./animations/no_sun_rain.mp4', 'rb')
+
 video_bytes = video_file.read()
-
 st.video(video_bytes)
+
 image = Image.open('thapar_bg_logo.png')
 st.image(image)
 components.html(
@@ -77,3 +76,31 @@ components.html(
     <a href="https://rudranshbansal.github.io/" title="Our previous project">For More Info Click Here</a>
     """
 )
+
+import base64
+import imghdr
+import streamlit as st
+
+def add_bg_from_local(image_file):
+    # Determine the MIME type of the image file
+    image_type = imghdr.what(image_file)
+    if not image_type:
+        raise ValueError("Invalid image file")
+
+    with open(image_file, "rb") as f:
+        encoded_string = base64.b64encode(f.read()).decode()
+
+    # Set the background image using inline CSS
+    st.markdown(
+        f"""
+        <style>
+        .stApp {{
+            background-image: url('data:image/{image_type};base64,{encoded_string}');
+            background-size: cover;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+add_bg_from_local("sample_img.jpeg")
